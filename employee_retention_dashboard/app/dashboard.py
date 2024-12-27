@@ -18,7 +18,7 @@ st.title("Employee Retention Analytics Dashboard")
 @st.cache_data
 def load_data():
     # Specify the encoding to handle potential issues
-    df = pd.read_csv('app/turnover-data-set.csv', encoding='ISO-8859-1')
+    df = pd.read_csv('turnover-data-set.csv', encoding='ISO-8859-1')
     df['age_group'] = pd.cut(df['age'], bins=[0, 25, 30, 35, 40, 100], 
                             labels=['<25', '25-30', '30-35', '35-40', '40+'])
     return df
