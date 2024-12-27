@@ -16,6 +16,3 @@ env/
 # Ignore Docker files
 Dockerfile
 .dockerignore
-
-# Ignore requirements.txt
-requirements.txt
