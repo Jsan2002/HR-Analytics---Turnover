@@ -1,0 +1,447 @@
+import dash
+from dash import dcc, html
+from dash.dependencies import Input, Output
+import pandas as pd
+import plotly.express as px
+from lifelines import KaplanMeierFitter
+import plotly.graph_objects as go
+
+# Load your updated dataset
+file_path = "/Volumes/sanket/HR Analtics .ipynb/updated_turnover_data_set.csv"
+df = pd.read_csv(file_path, encoding='ISO-8859-1')
+
+# Check for duplicates and remove them
+if df.duplicated().any():
+    print("Duplicate rows found. Removing duplicates...")
+    df = df.drop_duplicates()
+
+# Check for duplicates in the 'stag' column
+if df['stag'].duplicated().any():
+    print("Duplicate values found in 'stag' column. Removing duplicates...")
+    df = df[~df['stag'].duplicated(keep='first')]
+
+# Reset index to ensure unique index
+df.reset_index(drop=True, inplace=True)
+
+# Print the DataFrame to check its contents
+print("DataFrame loaded:")
+print(df.head())  # Display the first few rows of the DataFrame
+
+# Initialize the Dash app
+app = dash.Dash(__name__)
+
+# Compute Kaplan-Meier survival function
+kmf = KaplanMeierFitter()
+kmf.fit(durations=df['stag'], event_observed=df['event'])
+
+# Create a DataFrame for predicted retention scores
+df['predicted_retention_score'] = kmf.predict(df['stag'])
+
+# Define the layout of the dashboard
+app.layout = html.Div([
+    html.H1("Employee Retention Dashboard", style={"text-align": "center"}),
+
+    # Employee Retention Prediction
+    html.Div([
+        dcc.Graph(
+            id='predicted-retention-scores',
+            figure=px.bar(
+                df,
+                x='profession',  # Ensure this column name is correct
+                y='predicted_retention_score',
+                title="Predicted Retention Scores for Employees",
+                labels={'predicted_retention_score': 'Predicted Retention Score', 'profession': 'Employee'},
+                hover_data=['predicted_retention_score']
+            )
+        )
+    ]),
+
+    # Key Factors Influencing Retention
+    html.Div([
+        dcc.Graph(
+            id='key-factors',
+            figure=px.bar(
+                df,
+                x='age',  # Ensure this column name is correct
+                y='predicted_retention_score',
+                title="Key Factors Influencing Retention",
+                labels={'predicted_retention_score': 'Predicted Retention Score', 'age': 'Age'},
+                hover_data=['predicted_retention_score']
+            )
+        )
+    ]),
+
+    # Retention Trends Over Time
+    html.Div([
+        dcc.Graph(
+            id='retention-trends',
+            figure=px.line(
+                df,
+                x='join_date',  # Ensure this column name is correct
+                y='predicted_retention_score',
+                title="Retention Trends Over Time",
+                labels={'predicted_retention_score': 'Predicted Retention Score', 'join_date': 'Join Date'},
+                hover_data=['predicted_retention_score']
+            )
+        )
+    ]),
+
+    # Personality and Performance Insights
+    html.Div([
+        dcc.Graph(
+            id='personality-performance',
+            figure=px.scatter(
+                df,
+                x='extraversion',  # Ensure this column name is correct
+                y='predicted_retention_score',
+                title="Personality Traits vs Retention",
+                labels={'predicted_retention_score': 'Predicted Retention Score', 'extraversion': 'Extraversion'},
+                hover_data=['predicted_retention_score']
+            )
+        )
+    ]),
+
+    # Workforce Demographics Overview
+    html.Div([
+        dcc.Graph(
+            id='demographics-overview',
+            figure=px.pie(
+                df,
+                names='gender',  # Ensure this column name is correct
+                title="Workforce Gender Distribution",
+                values='predicted_retention_score'  # Change this to an appropriate value
+            )
+        )
+    ]),
+
+    # Department/Team Retention Analysis
+    html.Div([
+        dcc.Graph(
+            id='department-retention',
+            figure=px.bar(
+                df,
+                x='industry',  # Ensure this column name is correct
+                y='predicted_retention_score',
+                title="Department Retention Analysis",
+                labels={'predicted_retention_score': 'Predicted Retention Score', 'industry': 'Department'},
+                hover_data=['predicted_retention_score']
+            )
+        ),
+        # Add information about department codes
+        html.Div([
+            html.H4("Department Codes:", style={"text-align": "center"}),
+            html.Ul([
+                html.Li("Ho: Hotels"),
+                html.Li("Re: Restaurants"),
+                html.Li("Ca: Cafes (or Catering)")
+            ], style={"text-align": "center"})
+        ])
+    ]),
+
+    # Impact of Hiring Sources
+    html.Div([
+        dcc.Graph(
+            id='hiring-sources',
+            figure=px.bar(
+                df,
+                x='traffic',  # Ensure this column name is correct
+                y='predicted_retention_score',
+                title="Impact of Hiring Sources on Retention",
+                labels={'predicted_retention_score': 'Predicted Retention Score', 'traffic': 'Hiring Source'},
+                hover_data=['predicted_retention_score']
+            )
+        )
+    ])
+])
+
+# Run the app
+if __name__ == '__main__':
+    app.run_server(debug=True)
+
+
+
+part 2 . 
+
+
+    import dash
+from dash import dcc, html
+import pandas as pd
+import plotly.express as px
+from lifelines import KaplanMeierFitter
+
+# Load your updated dataset
+file_path = "/Volumes/sanket/HR Analtics .ipynb/updated_turnover_data_set.csv"
+df = pd.read_csv(file_path, encoding='ISO-8859-1')
+
+# Check for duplicates and remove them
+if df.duplicated().any():
+    print("Duplicate rows found. Removing duplicates...")
+    df = df.drop_duplicates()
+
+# Check for duplicates in the 'stag' column
+if df['stag'].duplicated().any():
+    print("Duplicate values found in 'stag' column. Removing duplicates...")
+    df = df[~df['stag'].duplicated(keep='first')]
+
+# Reset index to ensure unique index
+df.reset_index(drop=True, inplace=True)
+
+# Print the DataFrame to check its contents
+print("DataFrame loaded:")
+print(df.head())  # Display the first few rows of the DataFrame
+
+# Initialize the Dash app
+app = dash.Dash(__name__)
+
+# Compute Kaplan-Meier survival function
+kmf = KaplanMeierFitter()
+kmf.fit(durations=df['stag'], event_observed=df['event'])
+
+# Create a DataFrame for predicted retention scores
+df['predicted_retention_score'] = kmf.predict(df['stag'])
+
+# Filter for specific employees
+employees_of_interest = ['Johnson', 'Peterson', 'Sidorson']
+filtered_df = df[df['profession'].isin(employees_of_interest)]
+
+# Check if filtered_df is empty before accessing values
+if not filtered_df.empty:
+    # Define the layout of the dashboard
+    app.layout = html.Div([
+        html.H1("Employee Retention Dashboard", style={"text-align": "center"}),
+
+        # Summary of Predictions
+        html.Div([
+            html.H2("Predicted Retention Scores for Selected Employees", style={"text-align": "center"}),
+            html.Div([
+                html.P(f"Johnson's Predicted Retention Score: {filtered_df[filtered_df['profession'] == 'Johnson']['predicted_retention_score'].values[0]}"),
+                html.P(f"Peterson's Predicted Retention Score: {filtered_df[filtered_df['profession'] == 'Peterson']['predicted_retention_score'].values[0]}"),
+                html.P(f"Sidorson's Predicted Retention Score: {filtered_df[filtered_df['profession'] == 'Sidorson']['predicted_retention_score'].values[0]}")
+            ], style={"text-align": "center"})
+        ]),
+
+        # Employee Retention Prediction
+        html.Div([
+            dcc.Graph(
+                id='predicted-retention-scores',
+                figure=px.bar(
+                    filtered_df,
+                    x='profession',
+                    y='predicted_retention_score',
+                    title="Predicted Retention Scores for Employees",
+                    labels={'predicted_retention_score': 'Predicted Retention Score', 'profession': 'Employee'},
+                    hover_data=['predicted_retention_score']
+                )
+            )
+        ]),
+
+        # Key Factors Influencing Retention
+        html.Div([
+            dcc.Graph(
+                id='key-factors',
+                figure=px.bar(
+                    filtered_df,
+                    x='age',  # Ensure this column name is correct
+                    y='predicted_retention_score',
+                    title="Key Factors Influencing Retention",
+                    labels={'predicted_retention_score': 'Predicted Retention Score', 'age': 'Age'},
+                    hover_data=['predicted_retention_score']
+                )
+            )
+        ]),
+
+        # Personality and Performance Insights
+        html.Div([
+            dcc.Graph(
+                id='personality-performance',
+                figure=px.scatter(
+                    filtered_df,
+                    x='extraversion',  # Ensure this column name is correct
+                    y='predicted_retention_score',
+                    title="Personality Traits vs Retention",
+                    labels={'predicted_retention_score': 'Predicted Retention Score', 'extraversion': 'Extraversion'},
+                    hover_data=['predicted_retention_score']
+                )
+            )
+        ]),
+
+        # Workforce Demographics Overview
+        html.Div([
+            dcc.Graph(
+                id='demographics-overview',
+                figure=px.pie(
+                    filtered_df,
+                    names='gender',  # Ensure this column name is correct
+                    title="Workforce Gender Distribution",
+                    values='predicted_retention_score'  # Change this to an appropriate value
+                )
+            )
+        ]),
+
+        # Department/Team Retention Analysis
+        html.Div([
+            dcc.Graph(
+                id='department-retention',
+                figure=px.bar(
+                    filtered_df,
+                    x='industry',  # Ensure this column name is correct
+                    y='predicted_retention_score',
+                    title="Department Retention Analysis",
+                    labels={'predicted_retention_score': 'Predicted Retention Score', 'industry': 'Department'},
+                    hover_data=['predicted_retention_score']
+                )
+            )
+        ]),
+
+        # Impact of Hiring Sources
+        html.Div([
+            dcc.Graph(
+                id='hiring-sources',
+                figure=px.bar(
+                    filtered_df,
+                    x='traffic',  # Ensure this column name is correct
+                    y='predicted_retention_score',
+                    title="Impact of Hiring Sources on Retention",
+                    labels={'predicted_retention_score': 'Predicted Retention Score', 'traffic': 'Hiring Source'},
+                    hover_data=['predicted_retention_score']
+                )
+            )
+        ])
+    ])
+else:
+    # Handle the case where no employees of interest are found
+    app.layout = html.Div([
+        html.H1("Employee Retention Dashboard", style={"text-align": "center"}),
+        html.H2("No data available for the selected employees.", style={"text-align": "center"})
+    ])
+
+# Run the app
+if __name__ == '__main__':
+    app.run_server(debug=True)
+
+
+
+
+    part 3
+
+
+    import streamlit as st
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from lifelines import KaplanMeierFitter
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+# Page config
+st.set_page_config(page_title="Employee Retention Dashboard", layout="wide")
+
+# Title
+st.title("Employee Retention Analytics Dashboard")
+
+# Load data
+@st.cache_data
+def load_data():
+    # Specify the encoding to handle potential issues
+    df = pd.read_csv('turnover-data-set.csv', encoding='ISO-8859-1')
+    df['age_group'] = pd.cut(df['age'], bins=[0, 25, 30, 35, 40, 100], 
+                            labels=['<25', '25-30', '30-35', '35-40', '40+'])
+    return df
+
+df = load_data()
+
+# Sidebar
+st.sidebar.header('Dashboard Navigation')
+page = st.sidebar.radio('Select Page', 
+    ['Overview', 'Survival Analysis', 'Risk Analysis', 'Recommendations'])
+
+if page == 'Overview':
+    # Overview metrics
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Total Employees", len(df))
+    with col2:
+        st.metric("Average Tenure (months)", round(df['stag'].mean(), 1))
+    with col3:
+        st.metric("Turnover Rate", f"{(df['event'].mean()*100):.1f}%")
+    with col4:
+        st.metric("Avg Employee Age", round(df['age'].mean(), 1))
+
+    # Age distribution
+    st.subheader("Age Distribution by Department")
+    fig_age = px.box(df, x='profession', y='age', color='profession',
+                     title='Age Distribution across Departments')
+    st.plotly_chart(fig_age, use_container_width=True)
+
+    # Tenure by department
+    st.subheader("Tenure Analysis by Department")
+    fig_tenure = px.box(df, x='profession', y='stag', color='profession',
+                       title='Tenure Distribution across Departments')
+    st.plotly_chart(fig_tenure, use_container_width=True)
+
+elif page == 'Survival Analysis':
+    st.header("Survival Analysis")
+    
+    # Kaplan-Meier Survival Curves
+    kmf = KaplanMeierFitter()
+    
+    # Select profession for analysis
+    selected_prof = st.multiselect('Select Professions', 
+                                 df['profession'].unique(),
+                                 default=df['profession'].unique()[:3])
+    
+    fig = go.Figure()
+    for prof in selected_prof:
+        mask = (df['profession'] == prof)
+        kmf.fit(df[mask]['stag'], 
+                event_observed=df[mask]['event'],
+                label=prof)
+        fig.add_trace(go.Scatter(x=kmf.timeline,
+                                y=kmf.survival_function_.values.flatten(),
+                                name=prof))
+    
+    fig.update_layout(title='Survival Curves by Profession',
+                     xaxis_title='Tenure (months)',
+                     yaxis_title='Survival Probability')
+    st.plotly_chart(fig, use_container_width=True)
+
+elif page == 'Risk Analysis':
+    st.header("Risk Analysis")
+
+    # Calculate risk scores
+    df['risk_score'] = (
+        (df['age'] < 30).astype(int) * 2 +
+        (df['anxiety'] > df['anxiety'].mean()).astype(int) * 1.5 +
+        (df['stag'] < 12).astype(int) * 3
+    )
+
+    # Risk heatmap
+    risk_matrix = pd.crosstab(df['profession'], df['industry'], 
+                             values=df['risk_score'], aggfunc='mean')
+    
+    fig_heat = px.imshow(risk_matrix,
+                        labels=dict(x="Industry", y="Profession", color="Risk Score"),
+                        title="Risk Heatmap by Profession and Industry")
+    st.plotly_chart(fig_heat, use_container_width=True)
+
+    # High risk groups
+    st.subheader("High Risk Groups")
+    high_risk = df[df['risk_score'] >= df['risk_score'].quantile(0.9)]
+    risk_prof = high_risk.groupby('profession').size().sort_values(ascending=True)
+    
+    fig_risk = px.bar(risk_prof, orientation='h',
+                      title='Number of High-Risk Employees by Profession')
+    st.plotly_chart(fig_risk, use_container_width=True)
+
+
+
+
+
+
+
+
+
+
+    streamlit run dashboard.py
